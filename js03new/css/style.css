@@ -1,0 +1,59 @@
+/* #btn_stt{
+    background-image: url("img/green");
+    
+} */
+
+/* #active{
+    background-image: url("img/red");
+} */
+
+h1{
+    color: white;
+    background-color: midnightblue;
+    text-align: center;
+}
+
+table {
+    margin: 3px auto;    /* 上下3px 左右auto */
+}
+
+
+.input_wrap {
+    text-align: center;
+}
+
+h2 {
+    /*線の種類（実線） 太さ 色*/
+    border-bottom: solid 3px black;
+  }
+
+.ac-parent {
+	position: relative;  /* 追加 */
+	height: 50px;
+	border-bottom: 1px solid #fff;
+	background-color: #157094;
+	color: #fff;
+	text-align: center;
+	line-height: 50px;
+	cursor: pointer;
+}
+
+/* 擬似要素で下三角形を作成 */
+.ac-parent:after {
+	content: "";
+	display: inline-block;
+	position: absolute;
+	top: 45%;
+	right: 30px;
+	width: 10px;
+	height: 10px;
+	border-right: 3px solid #fff;
+	border-bottom: 3px solid #fff;
+	transform: translateY(-50%) rotate(45deg);
+	transition: .3s;
+}
+
+/* オープン時にopenクラスを付与 */
+.ac-parent.open:after {
+	transform: rotate(225deg);
+}

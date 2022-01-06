@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+
+<link rel="stylesheet" href="css/style.css">
+
+<head>
+  <meta charset="UTF-8">
+</head>
+
+<body style="background-color:beige">
+
+  <h1>音声認識データ共有</h1>
+  <p></p>
+  <table id="list2" ></table>  <!--style="visibility:collapse;" -->
+  
+
+
+  <div>
+    <p id="output_stt" hidden>ここに結果が返ります。</p>
+    <p id="confidence_stt"></p>
+  </div>
+  <div>
+    <H2 style="text-align:center" style="color: antiquewhite; font-size: 60pt; background-color: midnightblue;">音声認識結果出力
+    </H2>
+  </div>
+  <div id="output" style="overflow: auto;height: 300px;">
+    <table id="list"></table>
+  </div>
+
+  <div>
+    <H2 style="text-align:center" style="color: antiquewhite; font-size: 60pt; background-color: midnightblue;"></H2>
+  </div>
+  <!-- <div class="input_wrap"><table><tr><td><input type="text" id="memo-text" name="memo-text" required
+       minlength="4" maxlength="8" size="100"></td><td width="70" align="right"></td></tr></table></div> -->
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <script type="module">
+    var SpeechRecognition = SpeechRecognition;
+if (!SpeechRecognition){
+  if (typeof webkitSpeechRecognition !== 'undefined'){
+    SpeechRecognition = webkitSpeechRecognition;
+  }
+}
+ 
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } 
+from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+// Your web app's Firebase configuration
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkAG33R89i8fEj2qwcSa0ugJFLg17G7lw",
+      authDomain: "gschat-a1f2d.firebaseapp.com",
+      projectId: "gschat-a1f2d",
+      storageBucket: "gschat-a1f2d.appspot.com",
+      messagingSenderId: "756924737176",
+      appId: "1:756924737176:web:28c5acef35b2f592e6d2ed"
+    };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db, "gschat");  //どのデータベールを参照するか
+    
+    
+
+
+    //最初にデータ取得＆onSnapshotでリアルタイムにデータを取得
+    onChildAdded(dbRef, function(data){  
+        const date1 = data.val(); 
+        const msg  = data.val();    //オブジェクトデータを取得し、変数msgに代入
+        const key  = data.key;      //データのユニークキー（削除や更新に使用可能）
+        const roomDataset = data.room;
+        const venueDataset = data.venue;
+        const organizerDataset = data.organizer;
+
+        //表示用テキスト・HTMLを作成
+        let h = '<tr><th id='+key+' class="memo"  width="500" align="left">';    //文字起こしデータをテーブルに
+            h += msg.text;
+            h += '</th><td class="key" style="visibility:hidden;" width="0">'+key;
+            h +=  '</td><td class="room_table" style="visibility:hidden;" width="0">'+msg.room+'</td><td class="venue_table" style="visibility:hidden;" width="0">'+msg.venue+'</td><td class="organizer_table" style="visibility:hidden;" width="0">'+msg.organizer+'</td><td  class="time" align="right" width="200">';    //文字起こしデータをテーブルに格納
+            h += msg.time;
+            h += '</td></tr>';
+           
+          
+        $("#list").prepend(h); //#listの最後に追加
+
+        var table = document.getElementById("list");
+        var room_names = table.rows[0].cells[2].textContent;
+        var venue_names = table.rows[0].cells[3].textContent;
+        var organizer_names = table.rows[0].cells[4].textContent;
+      console.log(room_names);
+      console.log(venue_names);
+      console.log(organizer_names);
+
+
+      let t = '<tr><th id="dataSet" class="dataSet"  width="400" align="left"><b>ルーム名:  ';    //文字起こしデータをテーブルに
+            t += room_names;
+            t += '</b></th><td class="dataSet2" width="400"><b>主催者:  '+organizer_names;
+            t +=  '</b></td><td class="dataSet3" width="400"><b>メイン会場:  '+venue_names;
+            t  += '</b></td></tr>';
+           
+            // $("#list2").remove;
+            // $("#list2").prepend(t); //#listの最後に追加
+
+            var pushData  = document.getElementById('list2');
+            pushData.innerHTML = t;
+        
+    });
+
+
+
+</script>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+
+<link rel="stylesheet" href="css/style.css">
+<head>
+<meta charset="UTF-8">
+</head>
+<body style="background-color:beige">
+
+<h1 >音声認識データ共有</h1>
+<div class="input_wrap"><input type="image" src="img/green.png" id="btn_stt" alt="音声認識の開始"></input></div>
+<div>
+  <p id="output_stt" hidden>ここに結果が返ります。</p>
+  <p id="confidence_stt"></p>
+</div>
+<div><H2 style="text-align:center" style="color: antiquewhite; font-size: 60pt; background-color: midnightblue;">音声認識結果出力</H2></div>
+<div id="output" style="overflow: auto;height: 300px;"><table id="list"></table></div>
+
+<div><H2 style="text-align:center" style="color: antiquewhite; font-size: 60pt; background-color: midnightblue;"></H2></div>
+<div class="input_wrap"><table><tr><td><input type="text" id="memo-text" name="memo-text" required
+       minlength="4" maxlength="36" size="100"></td><td width="70" align="right"></td></tr></table></div>
+
+<div>
+  <h1 >基本設定</h1>
+  <P>操作方法・・・各情報を設定する際には、テキストボックスの右側にある編集ボタンを押下してから必要情報を入力してください。</P>
+  <p>入力後に確定ボタンを押下すると、情報が反映されます。</p>
+       <dl class="ac">
+        <dt class="ac-parent">ルーム名</dt>
+        <dd class="ac-child"><p></p><div><b>ルーム名:  </b><b id="room_name" class="room_name">未設定</b><div><input type="text" name="roomname" id="roomname"><input class="config1" type="button" id="cfg1" value="編集"></div><p></p></dd>
+        <dt class="ac-parent">主催者</dt>
+        <dd class="ac-child"><P></P><div><b>主催者:  </b><b id="organizer_name" class="organizer_name">未設定</b></div><input type="text" name="organizer" id="organizer"><input class="config2" type="button" id="cfg2" value="編集"><p></p></dd>
+        <dt class="ac-parent">メイン会場</dt>
+        <dd class="ac-child"><p></p><div><b>会場名:  </b><b id="venue_name" class="venue_name">未設定</b></div><input type="text"  name="venue" id="venue"><input class="config3" type="button" id="cfg3" value="編集"><p></p></dd>
+        
+      </dl>
+</div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script type="module">
+var SpeechRecognition = SpeechRecognition;
+if (!SpeechRecognition){
+  if (typeof webkitSpeechRecognition !== 'undefined'){
+    SpeechRecognition = webkitSpeechRecognition;
+  }
+}
+ 
+if (SpeechRecognition){
+  var btn_stt = document.getElementById('btn_stt');  
+  btn_stt.onclick = function(){
+    btn_stt.disabled = true;
+ 
+    // SpeechRecognitionの生成
+    var recognition = new SpeechRecognition();  
+    recognition.lang = 'ja'; 
+ 
+    // 音声認識の開始
+    recognition.start();
+    
+    // 結果
+    recognition.onresult = function(event) {
+      
+      // 文字列の取得
+      var speechResult = event.results[0][0].transcript;
+      document.getElementById('output_stt').innerHTML =  speechResult + '。';
+      
+      // 信頼度 ※Egdeは現在(2021/06)、信頼度には非対応で常に0になる
+      document.getElementById('confidence_stt').innerHTML = '信頼度： ' + event.results[0][0].confidence + 
+          '<br>※信頼度は0.0 ～ 1.0で1.0に近いほど信頼度が高いです。';
+ 
+      console.log(event.results);
+
+      const now = new Date();
+      var target = document.getElementById("DateTimeDisp");
+      var Year = now.getFullYear();
+      var Month = now.getMonth()+1;
+      var Date1 = now.getDate();
+      var Hour = now.getHours();
+      var Min = now.getMinutes();
+      var Sec = now.getSeconds();
+      const time = ""+Year+"/"+Month+"/"+Date1+" "+Hour+":"+Min+":"+Sec;
+
+      const msg = {
+          time: time,
+          text: $("#output_stt").text(),
+          room: $("#room_name").text(),
+          organizer: $("#organizer_name").text(),
+          venue: $("#venue_name").text()
+        }
+        const newPostRef = push(dbRef); //ユニークKEYを生成
+        set(newPostRef, msg);           //"chat"にユニークKEYをつけてオブジェクトデータを登録
+      
+    }
+    
+    // スピーチの終了
+    recognition.onspeechend = function() {
+      recognition.stop();
+      btn_stt.disabled = false;
+    }
+    
+    // エラー
+    recognition.onerror = function(event) {
+      btn_stt.disabled = false;
+      alert('エラーが発生しました。');
+    }
+  }
+}else{
+  alert('ブラウザはChromeをお使いください。');
+}
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } 
+from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+// Your web app's Firebase configuration
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkAG33R89i8fEj2qwcSa0ugJFLg17G7lw",
+      authDomain: "gschat-a1f2d.firebaseapp.com",
+      projectId: "gschat-a1f2d",
+      storageBucket: "gschat-a1f2d.appspot.com",
+      messagingSenderId: "756924737176",
+      appId: "1:756924737176:web:28c5acef35b2f592e6d2ed"
+    };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db, "gschat");  //どのデータベールを参照するか
+    
+    
+    
+
+    //最初にデータ取得＆onSnapshotでリアルタイムにデータを取得
+    onChildAdded(dbRef, function(data){  
+        const date1 = data.val(); 
+        const msg  = data.val();    //オブジェクトデータを取得し、変数msgに代入
+        const key  = data.key;      //データのユニークキー（削除や更新に使用可能）
+        const roomDataset = data.room;
+        const venueDataset = data.venue;
+        const organizerDataset = data.organizer;
+
+        //表示用テキスト・HTMLを作成
+        let h = '<tr><th id='+key+' class="memo"  width="500" align="left">';    //文字起こしデータをテーブルに
+            h += msg.text;
+            h += '</th><td class="key" style="visibility:hidden;" width="0">'+key;
+            h +=  '</td><td class="room_table" style="visibility:hidden;" width="0">'+msg.room+'</td><td class="venue_table" style="visibility:hidden;" width="0">'+msg.venue+'</td><td class="organizer_table" style="visibility:hidden;" width="0">'+msg.organizer+'</td><td  class="time" align="right" width="200">';    //文字起こしデータをテーブルに格納
+            h += msg.time;
+            h += '</td><td width="100" align="right"><input class="correction" type="button" id="edtBtn1" value="編集"></td><td width="50" align="right"><button class="delete">削除</button></td></tr>';
+           
+          
+        $("#list").prepend(h); //#listの最後に追加
+
+        var table = document.getElementById("list");
+        var room_names = table.rows[0].cells[2].textContent;
+        var venue_names = table.rows[0].cells[3].textContent;
+        var organizer_names = table.rows[0].cells[4].textContent;
+      console.log(room_names);
+      console.log(venue_names);
+      console.log(organizer_names);
+    });
+
+
+    $(document).on('click','.delete',function () { // .btn_deleteがクリックされたら処理を実行します
+      const deleteDB = $(this).closest('tr').find('.key').text();
+      console.log(deleteDB);    //
+      $(this)             // クリックした削除ボタンを指定する（ ここがthisであることは重要です ）
+      .closest("tr")  // 指定した要素の直近のtr要素を取得する
+      .remove();      // 取得した要素を削除する
+      set(ref(db, "gschat/"+deleteDB),null);   //削除したい項目のメッセージにnull値を入れる
+    });
+
+
+
+    $(document).on('click','.correction',function () { // .btn_deleteがクリックされたら処理を実行します
+      const correctionDB = $(this).closest('tr').find('.memo').text();  //テーブルのメモを取得
+      const correctionDB2 = $(this).closest('tr').find('.key').text();  //テーブルのキーを取得
+      const correctionDB3 = $(this).closest('tr').find('.time').text();  //テーブルの録音時刻を取得
+      console.log(correctionDB3);
+      var $sampleRows = document.getElementById( "list" ).rows;
+      var $sampleRows2 = document.getElementById(correctionDB2).textContent;
+      console.log($sampleRows2);
+
+
+      var objInRow  = document.getElementById(correctionDB2);
+      var objInText = document.getElementById('memo-text');
+      var objTable  = document.getElementById('output1');
+      objInRow.innerHTML = objInText.value;    //テキストボックスの値をテーブルのメモに入れる
+      // this.style.backgroundColor = "yellow";
+
+      $("#memo-text").val(correctionDB);    //編集用テキストボックスの値を音声出力結果に戻す
+      var memo_data = document.getElementById(correctionDB2).textContent;
+      console.log(memo_data); 
+      const correctionDB4 = $(this).closest('tr').find('.time').text();  //時刻は変更しない。Trから読み込み、そのまま保存
+            const msg = {
+            time: correctionDB4,
+            text: memo_data
+        }
+      set(ref(db, "gschat/"+correctionDB2),msg);   //変更後のデータをFirebaseに格納
+
+        // モードの切り替えはボタンの値で判定   
+    if (this.value == "編集")
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = false;
+        this.focus();
+        this.value = "確定";
+        this.style.backgroundColor = "yellow";
+    }
+    else
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = true;
+        this.value = "編集";
+    }
+      
+    });
+
+
+////////////////////////////
+//      ルーム名の処理     //
+////////////////////////////
+    $(document).on('click','.config1',function () { // ルーム名の設定。編集ボタン押下時の処理
+      let element = document.getElementById('room_name');
+      let element3 = document.getElementById('room_name').innerHTML;
+      console.log(element.innerHTML);
+      var objInText2 = document.getElementById('roomname');
+      element.innerHTML = objInText2.value;    //テキストボックスの空のデータをルーム名に入れる
+      let element2 = document.getElementById('room_name'); 
+      $("#roomname").val(element3);    //ルーム名編集テキストボックスに設定されているルーム名を入れる
+      var roomnameSet = document.getElementById("room_name").textContent;  
+
+
+      // set(ref(db, "gschat"),"a"); 
+
+
+    if (this.value == "編集")  //編集時のボタンの色変化
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = false;
+        this.focus();
+        this.value = "確定";
+        this.style.backgroundColor = "yellow";
+    }
+    else
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = true;
+        this.value = "編集";
+        var reset_target = document.getElementById("roomname");
+        reset_target.value = '';
+    }
+    });
+
+
+    
+////////////////////////////
+//      主催者名の処理     //
+////////////////////////////
+$(document).on('click','.config2',function () { // ルーム名の設定。編集ボタン押下時の処理
+      let element = document.getElementById('organizer_name');
+      let element6 = document.getElementById('organizer_name').innerHTML;
+      console.log(element.innerHTML);
+      var objInText3 = document.getElementById('organizer');
+      element.innerHTML = objInText3.value;    //テキストボックスの空のデータをルーム名に入れる
+      let element5 = document.getElementById('organizer_name'); 
+      $("#organizer").val(element6);    //ルーム名編集テキストボックスに設定されているルーム名を入れる
+      var roomnameSet = document.getElementById("organizer_name").textContent;  
+    if (this.value == "編集")  //編集時のボタンの色変化
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = false;
+        this.focus();
+        this.value = "確定";
+        this.style.backgroundColor = "yellow";
+    }
+    else
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = true;
+        this.value = "編集";
+        var reset_target = document.getElementById("roomname");
+        reset_target.value = '';
+    }
+    });
+
+
+////////////////////////////
+//      会場名の処理     //
+////////////////////////////
+$(document).on('click','.config3',function () { // ルーム名の設定。編集ボタン押下時の処理
+      let element12 = document.getElementById('venue_name');
+      let element13 = document.getElementById('venue_name').innerHTML;
+      console.log(element12.innerHTML);
+      var objInText8 = document.getElementById('venue');
+      element12.innerHTML = objInText8.value;    //テキストボックスの空のデータをルーム名に入れる
+      let element15 = document.getElementById('venue_name'); 
+      $("#venue").val(element13);    //ルーム名編集テキストボックスに設定されているルーム名を入れる
+      var roomnameSet = document.getElementById("venue_name").textContent;  
+    if (this.value == "編集")  //編集時のボタンの色変化
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = false;
+        this.focus();
+        this.value = "確定";
+        this.style.backgroundColor = "yellow";
+    }
+    else
+    {
+        this.style.cssText = "border:1px solid #888;"
+        this.readOnly = true;
+        this.value = "編集";
+        var reset_target = document.getElementById("roomname");
+        reset_target.value = '';
+    }
+    });
+
+
+    
+$(function () {
+  $('.ac-parent').on('click', function () {
+    $(this).next().slideToggle();
+    //openクラスをつける
+    $(this).toggleClass("open");
+    //クリックされていないac-parentのopenクラスを取る
+    $('.ac-parent').not(this).removeClass('open');
+
+    // 一つ開くと他は閉じるように
+    $('.ac-parent').not($(this)).next('.ac-child').slideUp();
+  });
+});
+
+
+</script>
+    
+
+
+</body>
+</html>
